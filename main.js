@@ -128,7 +128,6 @@
 		})
 		sorters.reverse();
 		const sorterIndex = headers.indexOf(sorters[0]);
-		console.log(sorterIndex);
 		const itemsNotNull = filterNull(sorterIndex);
 		switch(getSort()){
 			case "regular":
@@ -139,25 +138,21 @@
 				break;
 			case "bubble":
 				console.profile("bubbleSort");
-				bubbleSort();
+				const bubbArr = bubbleSort(itemsNotNull, sorterIndex);
+				renderNodes(bubbArr);
 				console.profileEnd("bubbleSort");
 				break;
 			case "merge":
 				console.profile("mergeSort");
-				mergeSort();
+				const merArr = mergeSort(itemsNotNull, sorterIndex);
+				renderNodes(merArr)
 				console.profileEnd("mergeSort");
 				break;
 			case "insertion":
 				console.profile("insertionSort");
-				insertionSort();
+				const inserArr = insertionSort(itemsNotNull, sorterIndex);
+				renderNodes(inserArr);
 				console.profileEnd("insertionSort");
-				break;
-			case "quartile":
-				console.profile("quartileSort");
-				sorters.forEach((sorter) => {
-					quartileSort(sorter)
-				});
-				console.profileEnd("quartileSort");
 				break;
 			default:
 				console.profile("regularSort");
@@ -175,29 +170,98 @@
 			const y = parseFloat(rowB[sorterIndex].textContent);
 			return x < y ? -1 : (x>y) ? 1 : 0;
 		})
-		// console.log(arr)
 		return arr;
 		
 	}
 	function bubbleSort(arr, sorterIndex) {
+		let swapped;
+		do{
+			swapped = false;
+			for(let i =0; i< arr.length; i++) {
+				const j = i + 1
+				if(arr[i] && arr[j]) {
+					const rowA = Array.from(arr[i].childNodes);
+					const rowB = Array.from(arr[j].childNodes);
+					const x = parseFloat(rowA[sorterIndex].textContent);
+					const y = parseFloat(rowB[sorterIndex].textContent);
+					if(x>y) {
+						var temp = arr[i];
+						arr[i] = arr[j];
+						arr[j] = temp;
+						swapped = true
+					}
+				}
+			}
+
+
+		} while(swapped)
+		return arr;
 		
 	}
+
+	// splits the array
 	function mergeSort (arr) {
-		
+		if(arr.length <= 1) {
+			return arr
+		}
+		let middle = Math.floor(arr.length / 2);
+		let left = arr.slice(0, middle)
+		let right = arr.slice(middle)
+		return merge(
+			mergeSort(left),
+			mergeSort(right)
+		)
 	}
-	
+	// Sort Array
 	function merge (left, right) {
+		let results = [],
+		idxLeft = 0,
+		idxRight = 0;
+		const sorterIndex = headers.indexOf(sorters[0]);
+
+		while(idxLeft < left.length && idxRight < right.length) {
+			const rowA = Array.from(left[idxLeft].childNodes);
+			const rowB = Array.from(right[idxRight].childNodes);
+			const x = parseFloat(rowA[sorterIndex].textContent);
+			const y = parseFloat(rowB[sorterIndex].textContent);
+
+			if (x < y) {
+				results.push(left[idxLeft])
+				idxLeft++
+			} else {
+				results.push(right[idxRight])
+				idxRight++
+			}
+		}
+		return results.concat(left.slice(idxLeft)).concat(right.slice(idxRight))
+
 		
 	}
-	function insertionSort (arr) {
-		
+	function insertionSort (arr, sorterIndex) {
+		for(let i = 1; i<arr.length; i++) {
+			const rowA = Array.from(arr[i].childNodes);
+			const x = parseFloat(rowA[sorterIndex].textContent);
+			let currentVal = arr[i]
+			let j;
+			for(j =i -1; j>=0; j--) {
+				const rowB = Array.from(arr[j].childNodes);
+				const y = parseFloat(rowB[sorterIndex].textContent);
+				if( y<= x) {
+					break;
+				} else {
+					arr[j+1] = arr[j]
+				}
+			}
+			arr[j+1] = currentVal
+		}
+		return arr
 	}
-	function quartileSort(sorter){
+	// function quartileSort(sorter){
 		
-	}
-	function splitQuartiles (results, sorter){
+	// }
+	// function splitQuartiles (results, sorter){
 		
-	}
+	// }
 	function renderNodes(arr){
 		const reverse = document.getElementById("reverse").checked;
 		if(reverse){
@@ -236,7 +300,6 @@
 			const rowTd = Array.from(row.childNodes)
 			return rowTd[sorterIndex].textContent;
 		})
-		// console.log(items);
 	}
 	function minMaxMean(items) {
 		let summary = {},
@@ -248,6 +311,21 @@
 		const headers = Object.keys(items[0]);
 		headers.forEach((header) => {
 			let tempArr = [];
+			items.forEach((item,i) => {
+				if(item.header !== null) {
+					tempArr.push(item[header]);
+					if(i === items.length - 1) {
+						tempArr.sort((a,b) => a < b ? -1 : (a > b) ? 1 : 0)
+						minVal = Math.min(...tempArr)
+						maxVal = Math.max(...tempArr)
+						meanVal = tempArr[Math.floor(tempArr.length/2)]
+						firstQuartile = tempArr[Math.floor(tempArr.length/4)]
+						thirdQuartile = tempArr[Math.floor((tempArr.length/4)*3)]
+
+
+					}
+				}
+			})
 			summary[header] = {
 				values: tempArr,
 				min: minVal,
@@ -258,6 +336,7 @@
 			}
 		
 		});
+		console.log(summary);
 		return summary
 	}
 	function heatMapColor(ele, val, key){
