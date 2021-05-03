@@ -13,7 +13,7 @@
 		const resetBtn = document.getElementById("reset");
 		resetBtn.addEventListener("click", () => {
 			data = originalData;
-			console.log(originalData);
+			// console.log(originalData);
 			while (tableEle.firstChild) {
 				tableEle.removeChild(tableEle.firstChild);
 			}
@@ -59,8 +59,11 @@
 	function createHeader(){
 		const trEle = document.createElement("TR");
 		const firstRow = data[0];
+		// console.log('FirstRow', firstRow)
 		// ES5 Object.keys
 		headers = Object.keys(firstRow);
+		// console.log('headers', headers)
+
 		headers.forEach((key, i) => {
 			const thEle = document.createElement("TH"),
 			btnEle = document.createElement("BUTTON");
@@ -125,10 +128,13 @@
 		})
 		sorters.reverse();
 		const sorterIndex = headers.indexOf(sorters[0]);
+		console.log(sorterIndex);
+		const itemsNotNull = filterNull(sorterIndex);
 		switch(getSort()){
 			case "regular":
 				console.profile("regularSort");
-				regularSort();
+				const regArr = regularSort(itemsNotNull, sorterIndex);
+				renderNodes(regArr);
 				console.profileEnd("regularSort");
 				break;
 			case "bubble":
@@ -159,7 +165,18 @@
 				console.profileEnd("regularSort");
 		}
 	}
-	function regularSort(arr, index){
+	function regularSort(arr, sorterIndex){
+		
+		arr.sort((a,b) => {
+			const rowA = Array.from(a.childNodes);
+			const rowB = Array.from(b.childNodes);
+
+			const x = parseFloat(rowA[sorterIndex].textContent);
+			const y = parseFloat(rowB[sorterIndex].textContent);
+			return x < y ? -1 : (x>y) ? 1 : 0;
+		})
+		// console.log(arr)
+		return arr;
 		
 	}
 	function bubbleSort(arr, sorterIndex) {
@@ -214,7 +231,12 @@
 		return sorter;
 	}
 	function filterNull(sorterIndex){
-		
+		const items = Array.from(tableEle.childNodes)
+		return items.filter((row) => {
+			const rowTd = Array.from(row.childNodes)
+			return rowTd[sorterIndex].textContent;
+		})
+		// console.log(items);
 	}
 	function minMaxMean(items) {
 		let summary = {},
